@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    
+    <!-- SEO TAGS -->
+    <meta name="description" content="Test your reaction time against F1 drivers! A simple, ad-free reaction speed game.">
+    <meta name="keywords" content="F1 reaction test, reaction game, reflex test, formula 1 game, school project">
+    <meta name="author" content="Student Project">
+    
+    <title>F1 Reflex Test - Beat the Grid</title>
+    
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@700;900&display=swap');
+        
+        :root {
+            --f1-red: #E10600; /* Official F1 Red shade */
+            --f1-dark: #15151e;
+            --gold: #FFD700;
+            --carbon: #1f1f1f;
+        }
+
+        * { 
+            margin: 0; 
+            padding: 0; 
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
+        }
+        
+        body {
+            font-family: 'Montserrat', sans-serif;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            user-select: none;
+            overflow: hidden;
+            background: var(--f1-red);
+            color: white;
+            /* F1 Racing Kerbs (Top and Bottom borders) */
+            border-top: 20px solid white;
+            border-bottom: 20px solid white;
+            background-image: 
+                linear-gradient(90deg, white 50%, #cc0000 50%),
+                linear-gradient(90deg, white 50%, #cc0000 50%);
+            background-size: 100px 20px;
+            background-repeat: repeat-x;
+            background-position: top, bottom;
+        }
+        
+        /* Overlay to hide the body background pattern in the middle area */
+        body::before {
+            content: '';
+            position: absolute;
+            top: 20px; bottom: 20px; left: 0; right: 0;
+            background: var(--f1-red);
+            z-index: -2;
+        }
+
+        /* === Background Elements === */
+        .circuit-bg {
+            position: absolute;
+            width: 400px;
+            height: 600px;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            opacity: 0.1;
+            pointer-events: none;
+            z-index: 0;
+            /* Add a subtle grid texture */
+            background-image: radial-gradient(#000 10%, transparent 10%);
+            background-size: 10px 10px;
+        }
+
+        .circuit-bg::before {
+            content: '';
+            position: absolute;
+            width: 100%; height: 100%;
+            border: 40px solid #000;
+            border-radius: 100px;
+        }
+
+        .circuit-bg::after {
+            content: '';
+            position: absolute;
+            width: calc(100% - 80px); height: calc(100% - 80px);
+            top: 40px; left: 40px;
+            border: 4px dashed rgba(255,255,255,0.4);
+            border-radius: 70px;
+        }
+
+        /* === Main Game Container === */
+        #gameScreen {
+            width: 100%; 
+            height: 100%;
+            display: flex; 
+            flex-direction: column;
+            align-items: center; 
+            justify-content: center;
+            text-align: center; 
+            cursor: pointer;
+            position: relative;
+            z-index: 10;
+            transition: background-color 0.1s;
+        }
+
+        /* State Colors */
+        .state-waiting { background: transparent; }
+        .state-ready { background: #ce0e2d; }
+        .state-go { background: #00d26a; }
+        .state-result { background: var(--f1-dark); }
+
+        /* Typography */
+        h1 {
+            font-size: 2.5rem;
+            text-transform: uppercase;
+            font-weight: 900;
+            font-style: italic; /* Speed look */
+            letter-spacing: -1px;
+            margin-bottom: 10px;
+            text-shadow: 3px 3px 0px rgba(0,0,0,0.2);
+        }
+
+        /* Chequered Flag Strip */
+        .chequered-strip {
+            height: 10px;
+            width: 100px;
+            margin: 0 auto 20px auto;
+            background-image: 
+                linear-gradient(45deg, #000 25%, transparent 25%), 
+                linear-gradient(-45deg, #000 25%, transparent 25%), 
+                linear-gradient(45deg, transparent 75%, #000 75%), 
+                linear-gradient(-45deg, transparent 75%, #000 75%);
+            background-color: white;
+            background-size: 10px 10px;    
+        }
+
+        .huge-text {
+            font-size: 4rem;
+            font-weight: 900;
+            font-style: italic;
+            letter-spacing: 2px;
+        }
+
+        .sub-text {
+            font-size: 1.2rem;
+            opacity: 0.9;
+            margin-top: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* Start Button */
+        #startButton {
+            background: white;
+            color: var(--f1-red);
+            font-family: 'Montserrat', sans-serif;
+            font-size: 1.5rem;
+            padding: 15px 50px;
+            border: none;
+            border-radius: 5px; /* Sharper corners for F1 look */
+            cursor: pointer;
+            font-weight: 900;
+            font-style: italic;
+            letter-spacing: 1px;
+            margin-top: 25px;
+            box-shadow: 5px 5px 0px rgba(0,0,0,0.3); /* Hard shadow */
+            transition: transform 0.1s, box-shadow 0.1s;
+            z-index: 20;
+            text-transform: uppercase;
+        }
+
+        #startButton:hover {
+            transform: translate(-2px, -2px);
+            box-shadow: 7px 7px 0px rgba(0,0,0,0.4);
+        }
+
+        #startButton:active {
+            transform: translate(2px, 2px);
+            box-shadow: 1px 1px 0px rgba(0,0,0,0.4);
+        }
+
+        /* Leaderboard - Carbon Fiber Style */
+        .leaderboard-container {
+            /* Carbon fiber pattern approximation */
+            background: 
+                linear-gradient(27deg, #151515 5px, transparent 5px) 0 5px,
+                linear-gradient(207deg, #151515 5px, transparent 5px) 10px 0px,
+                linear-gradient(27deg, #222 5px, transparent 5px) 0px 10px,
+                linear-gradient(207deg, #222 5px, transparent 5px) 10px 5px,
+                linear-gradient(90deg, #1b1b1b 10px, transparent 10px),
+                linear-gradient(#1d1d1d 25%, #1a1a1a 25%, #1a1a1a 50%, transparent 50%, transparent 75%, #242424 75%, #242424);
+            background-color: #131313;
+            background-size: 20px 20px;
+            
+            border-radius: 8px;
+            padding: 20px;
+            width: 90%;
+            max-width: 420px;
+            margin: 10px auto;
+            border: 2px solid rgba(255,255,255,0.1);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+
+        .lb-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px 10px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            font-size: 1rem; /* Larger text */
+            align-items: center;
+        }
+
+        .lb-row:last-child { border-bottom: none; }
+        
+        .lb-rank { 
+            color: var(--gold); 
+            font-weight: 900; 
+            font-style: italic;
+            width: 35px; 
+            text-align: left; 
+            font-size: 1.1rem;
+        }
+        
+        .lb-name { 
+            flex-grow: 1; 
+            text-align: left; 
+            font-weight: 700; 
+            letter-spacing: 0.5px;
+        }
+        
+        .lb-time { 
+            font-family: monospace; 
+            font-weight: 700; 
+            color: #ccc;
+            background: rgba(255,255,255,0.1);
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+
+        .lb-row.highlight {
+            background: rgba(255, 215, 0, 0.15);
+            border-left: 4px solid var(--gold);
+        }
+        
+        .lb-row.highlight .lb-name { color: var(--gold); }
+        .lb-row.highlight .lb-time { color: white; }
+
+        /* Timer */
+        #liveTimer {
+            font-family: monospace;
+            font-size: 5rem;
+            font-weight: 900;
+            font-style: italic;
+            color: #111;
+        }
+
+        /* Lights/Visuals */
+        .lights-container {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 40px;
+            background: #111;
+            padding: 15px;
+            border-radius: 10px;
+            border-bottom: 4px solid #444;
+        }
+        
+        .light {
+            width: 40px; height: 40px;
+            border-radius: 50%;
+            background: #333;
+            border: 2px solid #555;
+            transition: background 0.1s;
+        }
+
+        .state-ready .lights-container {  }
+        .state-ready .light { background: #ff0000; box-shadow: 0 0 15px #ff0000; border-color: #ff0000; }
+        
+        /* Mobile Adjustments */
+        @media (max-width: 600px) {
+            h1 { font-size: 1.8rem; }
+            .huge-text { font-size: 3rem; }
+            #liveTimer { font-size: 3.5rem; }
+            .circuit-bg { width: 300px; height: 450px; }
+            .lb-row { padding: 10px 5px; font-size: 0.9rem; }
+            #startButton { padding: 15px 30px; width: 100%; max-width: 300px; }
+            body { border-width: 10px; } /* Smaller kerbs on mobile */
+        }
+
+        .hidden { display: none !important; }
+    </style>
+</head>
+<body>
+
+    <!-- Background Circuit Decoration -->
+    <div class="circuit-bg"></div>
+
+    <!-- Game Container -->
+    <div id="gameScreen" class="state-waiting">
+        
+        <!-- START SCREEN -->
+        <div id="startContent">
+            <h1>F1 Reflex Test</h1>
+            <div class="chequered-strip"></div>
+            
+            <div class="leaderboard-container">
+                <div style="color: #fff; font-weight:900; font-style:italic; margin-bottom:15px; letter-spacing: 1px; border-bottom: 2px solid var(--f1-red); padding-bottom:5px; display:inline-block;">POLE POSITIONS</div>
+                <div id="leaderboardList"></div>
+            </div>
+
+            <div style="margin-top: 15px; font-size: 0.9rem; opacity: 0.8; font-weight: 700;">
+                YOUR BEST: <span id="personalBest" style="color: var(--gold);">---</span>
+            </div>
+
+            <button id="startButton">LIGHTS OUT</button>
+        </div>
+
+        <!-- READY SCREEN -->
+        <div id="readyContent" class="hidden">
+            <div class="lights-container">
+                <div class="light"></div><div class="light"></div><div class="light"></div><div class="light"></div><div class="light"></div>
+            </div>
+            <div class="huge-text">WAIT...</div>
+            <div class="sub-text">JUMP START = PENALTY</div>
+        </div>
+
+        <!-- GO SCREEN -->
+        <div id="goContent" class="hidden">
+            <div id="liveTimer">0.000</div>
+            <div class="huge-text">GO! GO!</div>
+        </div>
+
+        <!-- RESULT SCREEN -->
+        <div id="resultContent" class="hidden">
+            <div class="sub-text" id="resultTitle">SECTOR TIME</div>
+            <div class="huge-text" id="resultTime">0.000s</div>
+            <div class="sub-text" id="resultMessage" style="color: var(--gold); font-weight: 900; font-style: italic; margin: 20px 0; font-size: 1.5rem;"></div>
+            <div class="sub-text" style="font-size: 0.9rem;">TAP ANYWHERE TO RACE AGAIN</div>
+        </div>
+
+    </div>
+
+    <script>
+        // --- Configuration ---
+        // Updated data as requested
+        const defaultLeaderboard = [
+            {name: "Rajeeth K.", time: 0.001},
+            {name: "Lando N.", time: 0.195},
+            {name: "Max V.", time: 0.298},
+            {name: "Senna", time: 0.330},
+            {name: "RadhTan", time: 0.569}
+        ];
+
+        // --- State ---
+        let gameState = 'start'; 
+        let startTime = 0;
+        let timerInterval;
+        let timeoutId;
+        let leaderboard = [];
+        let bestTime = localStorage.getItem('f1_best_time_v2') || null;
+
+        // --- Elements ---
+        const screen = document.getElementById('gameScreen');
+        const startBtn = document.getElementById('startButton');
+        const liveTimer = document.getElementById('liveTimer');
+        
+        // --- Initialization ---
+        function init() {
+            loadLeaderboard();
+            updateUI();
+        }
+
+        function loadLeaderboard() {
+            // Using a new key 'v2' to ensure the new default data loads for you
+            const stored = localStorage.getItem('f1_leaderboard_v2');
+            if (stored) {
+                leaderboard = JSON.parse(stored);
+            } else {
+                leaderboard = [...defaultLeaderboard];
+            }
+            renderLeaderboard();
+            if(bestTime) document.getElementById('personalBest').textContent = bestTime + 's';
+        }
+
+        function renderLeaderboard() {
+            const list = document.getElementById('leaderboardList');
+            list.innerHTML = '';
+            // Display top 5
+            leaderboard.slice(0, 5).forEach((entry, index) => {
+                const div = document.createElement('div');
+                div.className = `lb-row ${entry.name === 'YOU' ? 'highlight' : ''}`;
+                div.innerHTML = `
+                    <div class="lb-rank">${index + 1}</div>
+                    <div class="lb-name">${entry.name}</div>
+                    <div class="lb-time">${Number(entry.time).toFixed(3)}s</div>
+                `;
+                list.appendChild(div);
+            });
+        }
+
+        // --- Game Logic ---
+        startBtn.addEventListener('click', (e) => {
+            e.stopPropagation(); 
+            startGame();
+        });
+
+        screen.addEventListener('pointerdown', handleInput); 
+
+        function startGame() {
+            gameState = 'ready';
+            updateUI();
+            
+            // Random delay between 2s and 5s
+            const delay = Math.floor(Math.random() * 3000) + 2000;
+            
+            timeoutId = setTimeout(() => {
+                if(gameState === 'ready') {
+                    go();
+                }
+            }, delay);
+        }
+
+        function go() {
+            gameState = 'go';
+            startTime = Date.now();
+            updateUI();
+            
+            timerInterval = setInterval(() => {
+                const now = Date.now();
+                const diff = (now - startTime) / 1000;
+                liveTimer.innerText = diff.toFixed(3);
+            }, 10);
+        }
+
+        function handleInput(e) {
+            if (e.target.id === 'startButton') return;
+
+            if (gameState === 'ready') {
+                // False start
+                clearTimeout(timeoutId);
+                endGame(null, true);
+            } else if (gameState === 'go') {
+                // Success
+                const reactionTime = (Date.now() - startTime) / 1000;
+                endGame(reactionTime, false);
+            } else if (gameState === 'result') {
+                // Reset
+                gameState = 'start';
+                updateUI();
+            }
+        }
+
+        function endGame(time, falseStart) {
+            clearInterval(timerInterval);
+            gameState = 'result';
+            
+            const title = document.getElementById('resultTitle');
+            const timeDisplay = document.getElementById('resultTime');
+            const msg = document.getElementById('resultMessage');
+
+            if (falseStart) {
+                title.innerText = "FALSE START";
+                timeDisplay.innerText = "DNF";
+                msg.innerText = "DRIVE THROUGH PENALTY";
+                msg.style.color = "#ff4444";
+                screen.style.background = "#ce0e2d";
+            } else {
+                title.innerText = "SECTOR 1 TIME";
+                timeDisplay.innerText = time.toFixed(3) + 's';
+                
+                // Update Stats
+                if (!bestTime || time < bestTime) {
+                    bestTime = time.toFixed(3);
+                    localStorage.setItem('f1_best_time_v2', bestTime);
+                    msg.innerText = "PURPLE SECTOR! (PB)";
+                    msg.style.color = "var(--gold)";
+                } else {
+                    msg.innerText = getComment(time);
+                    msg.style.color = "white";
+                }
+
+                // Update Leaderboard
+                leaderboard.push({name: 'YOU', time: time});
+                leaderboard.sort((a, b) => a.time - b.time);
+                leaderboard = leaderboard.slice(0, 10); 
+                localStorage.setItem('f1_leaderboard_v2', JSON.stringify(leaderboard));
+                loadLeaderboard(); 
+            }
+            
+            updateUI();
+        }
+
+        function getComment(time) {
+            if (time < 0.2) return "POLE POSITION PACE!";
+            if (time < 0.25) return "SOLID Q3 LAP";
+            if (time < 0.3) return "MIDFIELD PACE";
+            return "BACK OF THE GRID";
+        }
+
+        function updateUI() {
+            ['startContent', 'readyContent', 'goContent', 'resultContent'].forEach(id => {
+                document.getElementById(id).classList.add('hidden');
+            });
+
+            screen.className = '';
+
+            if (gameState === 'start') {
+                document.getElementById('startContent').classList.remove('hidden');
+                screen.classList.add('state-waiting');
+            } else if (gameState === 'ready') {
+                document.getElementById('readyContent').classList.remove('hidden');
+                screen.classList.add('state-ready');
+            } else if (gameState === 'go') {
+                document.getElementById('goContent').classList.remove('hidden');
+                screen.classList.add('state-go');
+            } else if (gameState === 'result') {
+                document.getElementById('resultContent').classList.remove('hidden');
+                screen.classList.add('state-result');
+            }
+        }
+
+        init();
+
+    </script>
+</body>
+</html>
+
+
