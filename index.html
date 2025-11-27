@@ -4,7 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     
-    <!-- SEO TAGS -->
+    <meta name="google-site-verification" content="d6a91c705944dd3e" />
+
     <meta name="description" content="Test your reaction time against F1 drivers! A simple, ad-free reaction speed game.">
     <meta name="keywords" content="F1 reaction test, reaction game, reflex test, formula 1 game, school project">
     <meta name="author" content="Student Project">
@@ -296,13 +297,10 @@
 </head>
 <body>
 
-    <!-- Background Circuit Decoration -->
     <div class="circuit-bg"></div>
 
-    <!-- Game Container -->
     <div id="gameScreen" class="state-waiting">
         
-        <!-- START SCREEN -->
         <div id="startContent">
             <h1>F1 Reflex Test</h1>
             <div class="chequered-strip"></div>
@@ -319,7 +317,6 @@
             <button id="startButton">LIGHTS OUT</button>
         </div>
 
-        <!-- READY SCREEN -->
         <div id="readyContent" class="hidden">
             <div class="lights-container">
                 <div class="light"></div><div class="light"></div><div class="light"></div><div class="light"></div><div class="light"></div>
@@ -328,13 +325,11 @@
             <div class="sub-text">JUMP START = PENALTY</div>
         </div>
 
-        <!-- GO SCREEN -->
         <div id="goContent" class="hidden">
             <div id="liveTimer">0.000</div>
             <div class="huge-text">GO! GO!</div>
         </div>
 
-        <!-- RESULT SCREEN -->
         <div id="resultContent" class="hidden">
             <div class="sub-text" id="resultTitle">SECTOR TIME</div>
             <div class="huge-text" id="resultTime">0.000s</div>
@@ -528,5 +523,3 @@
     </script>
 </body>
 </html>
-
-
